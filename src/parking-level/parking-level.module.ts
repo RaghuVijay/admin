@@ -9,14 +9,16 @@ import { UpdateParkingAreaProvider } from './providers/update-parking-area.provi
 import { DeleteParkingAreaProvider } from './providers/delete-parking-area.provider';
 import { ParkingCapacityModule } from 'src/parking-capacity/parking-capacity.module';
 import { HttpModule } from '@nestjs/axios';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ParkingLevel]),
     forwardRef(() => ParkingCapacityModule),
     HttpModule,
+    ConfigModule,
   ],
-  exports: [ParkingLevelService],
+  exports: [ParkingLevelService, GetParkingAreaProvider],
   controllers: [ParkingLevelController],
   providers: [
     ParkingLevelService,

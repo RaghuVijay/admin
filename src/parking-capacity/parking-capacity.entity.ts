@@ -10,7 +10,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { VehicleType } from './enums/VehicleTypes.enum';
-import { ParkingLevel } from 'src/parking-level/parking-level.entity';
 
 @Entity('parking_capacity')
 @Unique(['code'])

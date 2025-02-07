@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  db:
+    container_name: parking-db
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=parking
+    ports:
+      - '5433:5432'
+    networks:
+      - app-network
+    volumes:
+      - crazy_shaw_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U user -d parking']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  admin-service:
+    image: parking-admin:latest
+    container_name: parking-admin
+    ports:
+      - '3001:3001'
+    networks:
+      - app-network
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - DATABASE_USER=user
+      - DATABASE_PASSWORD=password
+      - DATABASE_NAME=parking
+
+  parking-management-service:
+    image: parking-management:latest
+    container_name: parking-management
+    ports:
+      - '3002:3002'
+    networks:
+      - app-network
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - DATABASE_USER=user
+      - DATABASE_PASSWORD=password
+      - DATABASE_NAME=parking
+
+  user-service:
+    image: parking-user-management:latest
+    container_name: parking-user-management
+    ports:
+      - '3000:3000'
+    networks:
+      - app-network
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - DATABASE_USER=user
+      - DATABASE_PASSWORD=password
+      - DATABASE_NAME=parking
+
+  notification-service:
+    image: parking_notification:latest
+    container_name: notification-management
+    ports:
+      - '3003:3003'
+    networks:
+      - app-network
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - DATABASE_USER=user
+      - DATABASE_PASSWORD=password
+      - DATABASE_NAME=parking
+
+  browserless:
+    image: browserless/chrome:latest
+    container_name: browserless
+    ports:
+      - '3004:3004'
+    networks:
+      - app-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+    environment:
+      - MAX_CONCURRENT_SESSIONS=10
+      - MAX_QUEUE_LENGTH=100
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
+      interval: 30s
+      retries: 5
+      timeout: 20s
+      start_period: 30s
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  crazy_shaw_data:
+    external: true

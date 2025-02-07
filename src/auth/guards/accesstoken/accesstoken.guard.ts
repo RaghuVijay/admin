@@ -5,12 +5,16 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { REQUEST_USER_KEY } from 'src/auth/constsants/auth.constants';
 
 @Injectable()
 export class AccessTokenGuard implements CanActivate {
-  constructor(private httpService: HttpService) {}
+  constructor(
+    private httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // Extract the request from the execution context
@@ -21,6 +25,7 @@ export class AccessTokenGuard implements CanActivate {
     const token = request.headers.authorization;
     console.log(token);
 
+    const userUrl = this.configService.get('appConfig.userUrl');
     if (!token) {
       throw new UnauthorizedException('Token not provided');
     }
@@ -28,7 +33,7 @@ export class AccessTokenGuard implements CanActivate {
     try {
       // Make the Axios call
       const response = await firstValueFrom(
-        this.httpService.get('http://localhost:3000/auth/validate', {
+        this.httpService.get(`${userUrl}/auth/validate`, {
           headers: {
             Authorization: token,
           },
